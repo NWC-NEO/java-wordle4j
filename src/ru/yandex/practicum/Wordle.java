@@ -42,22 +42,23 @@ public class Wordle {
 
     private static void runGameLoop(WordleGame game) {
         Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
+        int attemptsUsed = 0;
+        final int MAX_ATTEMPTS = 6;
 
-        System.out.println("Добро пожаловать в Wordle!");
+        printAndLog("Добро пожаловать в Wordle!");
 
-        while (!game.isGameOver()) {
+        while (attemptsUsed < MAX_ATTEMPTS) {
 
-            int attemptNumber = 6 - game.getStepsLeft() + 1;
-            System.out.println("Попытка " + attemptNumber + "/6: ");
-            System.out.println("Введите слово ...");
-            System.out.println("Что бы получить подсказку ничего не вводите и нажимайте Enter");
+            printAndLog("Попытка " + (attemptsUsed + 1) + "/6: ");
+            printAndLog("Введите слово ...");
+            printAndLog("Что бы получить подсказку ничего не вводите и нажимайте Enter");
 
             String input = scanner.nextLine().trim();
 
             try {
                 if (input.isEmpty()) {
                     String hint = game.getHint();
-                    System.out.println("Подсказка: " + (hint == null ? "нет" : hint));
+                    printAndLog("Подсказка: " + (hint == null ? "нет" : hint));
                     continue;
                 }
 
@@ -67,12 +68,19 @@ public class Wordle {
                 sb.append(input).append("\n").append(result);
                 System.out.println(sb);
 
+                attemptsUsed++;
+
+                if (result.equals("+++++")) {
+                    printAndLog("Поздравляем! Вы угадали слово!");
+                    return;
+                }
+
             } catch (WordleException e) {
                 System.out.println(e.getMessage());
             }
         }
 
-        System.out.println("Ответ: " + game.getAnswer());
+        printAndLog("Ответ: " + game.getAnswer());
     }
 
     private static PrintWriter createLogFile() throws IOException {
@@ -88,6 +96,13 @@ public class Wordle {
         if (log != null) {
             log.println("Фатальная ошибка");
             e.printStackTrace(log);
+        }
+    }
+
+    private static void printAndLog(String message) {
+        System.out.println(message);
+        if (log != null) {
+            log.println("UI: " + message);
         }
     }
 }

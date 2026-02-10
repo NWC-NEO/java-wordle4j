@@ -48,39 +48,39 @@ public class WordleDictionary {
     }
 
     public String analyzeWord(String guess, String answer) {
-
         guess = normalizeWord(guess);
         answer = normalizeWord(answer);
 
         char[] result = new char[5];
-        char[] answerChars = answer.toCharArray();
-        boolean[] used = new boolean[5];
+        Map<Character, Integer> unusedCount = new HashMap<>();
 
-        // +
+        // Ищем только точные совпадения
         for (int i = 0; i < 5; i++) {
-            if (guess.charAt(i) == answerChars[i]) {
+            char g = guess.charAt(i);
+            char a = answer.charAt(i);
+
+            if (g == a) {
                 result[i] = '+';
-                used[i] = true;
+            } else {
+                unusedCount.put(a, unusedCount.getOrDefault(a, 0) + 1);
             }
         }
 
-        // ^ и -
+        // Ищем буквы не на своих местах
         for (int i = 0; i < 5; i++) {
-
-            if (result[i] == '+') continue;
-
-            char ch = guess.charAt(i);
-            boolean found = false;
-
-            for (int j = 0; j < 5; j++) {
-                if (!used[j] && answerChars[j] == ch) {
-                    used[j] = true;
-                    found = true;
-                    break;
-                }
+            if (result[i] == '+') {
+                continue;
             }
 
-            result[i] = found ? '^' : '-';
+            char g = guess.charAt(i);
+            int count = unusedCount.getOrDefault(g, 0);
+
+            if (count > 0) {
+                result[i] = '^';
+                unusedCount.put(g, count - 1);
+            } else {
+                result[i] = '-';
+            }
         }
 
         return new String(result);
@@ -96,21 +96,28 @@ public class WordleDictionary {
         outer:
         for (String word : wordsList) {
 
-            for (char c : absent)
-                if (word.indexOf(c) >= 0)
+            for (char c : absent) {
+                if (word.indexOf(c) >= 0) {
                     continue outer;
+                }
+            }
 
-            for (var e : correct.entrySet())
-                if (word.charAt(e.getKey()) != e.getValue())
+            for (var e : correct.entrySet()) {
+                if (word.charAt(e.getKey()) != e.getValue()) {
                     continue outer;
+                }
+            }
 
             for (var e : wrong.entrySet()) {
-                if (word.indexOf(e.getKey()) == -1)
+                if (word.indexOf(e.getKey()) == -1) {
                     continue outer;
+                }
 
-                for (int pos : e.getValue())
-                    if (word.charAt(pos) == e.getKey())
+                for (int pos : e.getValue()) {
+                    if (word.charAt(pos) == e.getKey()) {
                         continue outer;
+                    }
+                }
             }
 
             result.add(word);

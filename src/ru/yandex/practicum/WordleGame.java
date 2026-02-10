@@ -27,9 +27,6 @@ public class WordleGame {
     private final Set<Character> absent = new HashSet<>();
     private final Map<Integer, Character> correct = new HashMap<>();
     private final Map<Character, Set<Integer>> wrong = new HashMap<>();
-    private int steps = 6;
-    private boolean gameOver;
-    private boolean gameWon;
 
     public WordleGame(WordleDictionary dictionary, PrintWriter log) {
         this.dictionary = dictionary;
@@ -42,9 +39,6 @@ public class WordleGame {
 
     public String makeGuess(String word) throws WordleException {
 
-        if (gameOver)
-            throw new InvalidWordException("Игра окончена");
-
         String normalized = WordleDictionary.normalizeWord(word);
 
         if (normalized.length() != 5)
@@ -55,7 +49,6 @@ public class WordleGame {
             throw new WordNotFoundInDictionaryException(normalized);
         }
 
-        steps--;
         attempts.add(normalized);
 
         String result = dictionary.analyzeWord(normalized, answer);
@@ -64,15 +57,6 @@ public class WordleGame {
         log.println("Ход " + (attempts.size()) + ": '" + normalized + "' -> [" + result + "]");
 
         updateFilters(normalized, result);
-
-        if (normalized.equals(answer)) {
-            gameWon = true;
-            gameOver = true;
-            log.println("Результат: ПОБЕДА на ходу " + attempts.size());
-        } else if (steps == 0) {
-            gameOver = true;
-            log.println("Результат: ПРОИГРЫШ. Попытки исчерпаны.");
-        }
 
         return result;
     }
@@ -115,9 +99,7 @@ public class WordleGame {
     }
 
     public String getHint() {
-
-        if (gameOver) return null;
-
+        log.println("Запрос подсказки");
         List<String> candidates = dictionary.filter(absent, correct, wrong);
         log.println("  - Найдено подходящих слов в словаре: " + candidates.size());
         candidates.removeAll(attempts);
@@ -136,18 +118,6 @@ public class WordleGame {
 
     public List<String> getHints() {
         return new ArrayList<>(hints);
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
-    }
-
-    public boolean isGameWon() {
-        return gameWon;
-    }
-
-    public int getStepsLeft() {
-        return steps;
     }
 
     public String getAnswer() {
